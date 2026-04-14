@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>IA Metr1ka</title>
+
+  <!-- React -->
+
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+
+  <!-- Babel (para JSX en browser) -->
+
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #0f172a;
+      color: white;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      max-width: 800px;
+      margin: auto;
+    }
+
+    .messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+    }
+
+    .message {
+      margin-bottom: 15px;
+      padding: 12px;
+      border-radius: 10px;
+      max-width: 80%;
+      white-space: pre-wrap;
+    }
+
+    .user {
+      background: #41c0f0;
+      color: black;
+      align-self: flex-end;
+    }
+
+    .bot {
+      background: #1e293b;
+      align-self: flex-start;
+    }
+
+    .input-area {
+      display: flex;
+      padding: 15px;
+      border-top: 1px solid #1e293b;
+    }
+
+    textarea {
+      flex: 1;
+      resize: none;
+      border-radius: 8px;
+      border: none;
+      padding: 10px;
+      font-size: 14px;
+    }
+
+    button {
+      margin-left: 10px;
+      padding: 10px 20px;
+      background: #41c0f0;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+    }
+  </style>
+
+</head>
+
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState } = React;
+
+function App() {
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  async function send() {
+    if (!input.trim()) return;
+
+    const userMessage = { role: "user", content: input };
+    setMessages(prev => [...prev, userMessage]);
+    setInput("");
+    setLoading(true);
+
+    try {
+      const res = await fetch("https://ia.metr1ka.com/api/generate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          model: "gemma",
+          prompt: input,
+          stream: false
+        })
+      });
+
+      const data = await res.json();
+
+      const botMessage = {
+        role: "bot",
+        content: data.response || "Sin respuesta"
+      };
+
+      setMessages(prev => [...prev, botMessage]);
+    } catch (err) {
+      setMessages(prev => [...prev, {
+        role: "bot",
+        content: "Error al conectar con la IA"
+      }]);
+    }
+
+    setLoading(false);
+  }
+
+  return (
+    <div className="container">
+      <div className="messages">
+        {messages.map((msg, i) => (
+          <div key={i} className={"message " + msg.role}>
+            {msg.content}
+          </div>
+        ))}
+        {loading && <div className="message bot">Pensando...</div>}
+      </div>
+
+      <div className="input-area">
+        <textarea
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          placeholder="Escribí tu mensaje..."
+        />
+        <button onClick={send} disabled={loading}>
+          Enviar
+        </button>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+
+</body>
+</html>

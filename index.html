@@ -99,44 +99,45 @@ function App() {
   const [loading, setLoading] = useState(false);
 
   async function send() {
-    if (!input.trim()) return;
+  if (!input.trim()) return;
 
-    const userMessage = { role: "user", content: input };
-    setMessages(prev => [...prev, userMessage]);
-    setInput("");
-    setLoading(true);
+  const userMessage = { role: "user", content: input };
+  setMessages(prev => [...prev, userMessage]);
+  const currentInput = input;
+  setInput("");
+  setLoading(true);
 
-    try {
-      const res = await fetch("https://ia.metr1ka.com/api/generate", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          model: "gemma",
-          prompt: input,
-          stream: false
-        })
-      });
+  try {
+    const res = await fetch("https://ia.metr1ka.com/api/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "gemma",        // asegúrate que este modelo esté descargado en Ollama
+        prompt: currentInput,
+        stream: false
+      })
+    });
 
-      const data = await res.json();
-
-      const botMessage = {
-        role: "bot",
-        content: data.response || "Sin respuesta"
-      };
-
-      setMessages(prev => [...prev, botMessage]);
-    } catch (err) {
-      setMessages(prev => [...prev, {
-        role: "bot",
-        content: "Error al conectar con la IA"
-      }]);
+    if (!res.ok) {
+      throw new Error(`HTTP error! status: ${res.status}`);
     }
 
+    const data = await res.json();
+    const botMessage = {
+      role: "bot",
+      content: data.response || data.text || "Sin respuesta del modelo"
+    };
+    setMessages(prev => [...prev, botMessage]);
+  } catch (err) {
+    console.error(err);
+    setMessages(prev => [...prev, {
+      role: "bot",
+      content: `Error de conexión: ${err.message}\n\n¿Está Ollama corriendo? ¿Caddy configurado correctamente?`
+    }]);
+  } finally {
     setLoading(false);
   }
-
+}
   return (
     <div className="container">
       <div className="messages">

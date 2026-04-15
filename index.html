@@ -109,11 +109,11 @@ function App() {
   setLoading(true);
 
   try {
-    const res = await fetch("http://166.1.88.83:11434/api/generate", {
+    const res = await fetch("https://api.allorigins.win/raw?url=" + encodeURIComponent("http://166.1.88.83:11434/api/generate"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "gemma",        // ← cambia si usás otro modelo
+        model: "gemma",
         prompt: currentInput,
         stream: false
       })

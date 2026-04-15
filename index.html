@@ -98,7 +98,7 @@ function App() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
 
- async function send() {
+async function send() {
   if (!input.trim()) return;
 
   const userMessage = { role: "user", content: input };
@@ -109,25 +109,20 @@ function App() {
   setLoading(true);
 
   try {
-    // Usando un proxy CORS más confiable para testing
-    const proxyUrl = "https://corsproxy.io/?";
-    const ollamaUrl = "http://166.1.88.83:11434/api/generate";
-
-    const res = await fetch(proxyUrl + encodeURIComponent(ollamaUrl), {
+    const res = await fetch("http://166.1.88.83:11434/api/generate", {
       method: "POST",
       headers: { 
-        "Content-Type": "application/json",
-        "x-requested-with": "XMLHttpRequest"   // ayuda en algunos proxies
+        "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        model: "gemma",           // asegúrate que este modelo esté descargado
+        model: "gemma",
         prompt: currentInput,
         stream: false
       })
     });
 
     if (!res.ok) {
-      throw new Error(`HTTP error! status: ${res.status}`);
+      throw new Error(`HTTP ${res.status}`);
     }
 
     const data = await res.json();
@@ -141,7 +136,7 @@ function App() {
     console.error(err);
     setMessages(prev => [...prev, {
       role: "bot",
-      content: `Error: ${err.message}\n\n¿Ollama está corriendo? ¿El modelo "gemma" está descargado?`
+      content: `Error: ${err.message}\n\nSi ves Mixed Content, avísame.`
     }]);
   } finally {
     setLoading(false);

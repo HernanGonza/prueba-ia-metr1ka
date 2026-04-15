@@ -109,17 +109,26 @@ function App() {
   setLoading(true);
 
   try {
-    const res = await fetch("https://api.allorigins.win/raw?url=" + encodeURIComponent("http://166.1.88.83:11434/api/generate"), {
+    // Usando un proxy CORS más confiable para testing
+    const proxyUrl = "https://corsproxy.io/?";
+    const ollamaUrl = "http://166.1.88.83:11434/api/generate";
+
+    const res = await fetch(proxyUrl + encodeURIComponent(ollamaUrl), {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json",
+        "x-requested-with": "XMLHttpRequest"   // ayuda en algunos proxies
+      },
       body: JSON.stringify({
-        model: "gemma",
+        model: "gemma",           // asegúrate que este modelo esté descargado
         prompt: currentInput,
         stream: false
       })
     });
 
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    if (!res.ok) {
+      throw new Error(`HTTP error! status: ${res.status}`);
+    }
 
     const data = await res.json();
     const botMessage = {
@@ -130,9 +139,9 @@ function App() {
     setMessages(prev => [...prev, botMessage]);
   } catch (err) {
     console.error(err);
-    setMessages(prev => [...prev, { 
-      role: "bot", 
-      content: `Error: ${err.message}\n\nAsegúrate que Ollama esté corriendo con "ollama serve"` 
+    setMessages(prev => [...prev, {
+      role: "bot",
+      content: `Error: ${err.message}\n\n¿Ollama está corriendo? ¿El modelo "gemma" está descargado?`
     }]);
   } finally {
     setLoading(false);

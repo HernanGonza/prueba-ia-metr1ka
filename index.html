@@ -98,7 +98,7 @@ function App() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
 
-  async function send() {
+ async function send() {
   if (!input.trim()) return;
 
   const userMessage = { role: "user", content: input };
@@ -109,32 +109,30 @@ function App() {
   setLoading(true);
 
   try {
-    const res = await fetch("http://166.1.88.83:3001/api/generate", {   // ← CAMBIO AQUÍ
+    const res = await fetch("http://166.1.88.83:11434/api/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "gemma",        // o el modelo que tengas descargado
+        model: "gemma",        // ← cambia si usás otro modelo
         prompt: currentInput,
         stream: false
       })
     });
 
-    if (!res.ok) {
-      throw new Error(`HTTP error! status: ${res.status}`);
-    }
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
     const data = await res.json();
     const botMessage = {
       role: "bot",
-      content: data.response || data.text || data.content || "Sin respuesta del modelo"
+      content: data.response || data.text || "Sin respuesta del modelo"
     };
 
     setMessages(prev => [...prev, botMessage]);
   } catch (err) {
     console.error(err);
-    setMessages(prev => [...prev, {
-      role: "bot",
-      content: `Error: ${err.message}\n\nRevisa que el AI Service esté corriendo en el puerto 3001`
+    setMessages(prev => [...prev, { 
+      role: "bot", 
+      content: `Error: ${err.message}\n\nAsegúrate que Ollama esté corriendo con "ollama serve"` 
     }]);
   } finally {
     setLoading(false);
